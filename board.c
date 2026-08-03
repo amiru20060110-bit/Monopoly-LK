@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include "types.h"
+
+Square board[40] = {
+        //index,name,type,property
+        //group_id,purchase_price,mortgage_value,base_rent,house_cost,hotel_cost,house_count,hotel_count,owner_id
+        {0, "GO",SQUARE_SPECIAL},
+        {1, "Pettah", PROPERTY,{GROUP_1, 1500, 750, 50, 500, 2000, 0, 0}},
+        {2, "Commiunity Development Fund",EVENT},
+        {3, "Maradana", PROPERTY,{GROUP_1, 1200, 600, 60, 120, 240, 0, 0}},
+        {4, "Income Tax", TAX},
+        {5, "Colombo Fort Railway Station", RAILWAY},
+        {6, "Bambalapitiya", PROPERTY,{GROUP_2, 1400, 700, 70, 140, 280, 0, 0}},
+        {7, "National Event Card", EVENT},
+        {8, "Wellawatte", PROPERTY,{GROUP_2, 1600, 800, 80, 160, 320, 0, 0}},
+        {9, "Mount_Lavinia", PROPERTY,{GROUP_2, 1800, 900, 90, 180, 360, 0, 0, 0}},
+        {10, "Jail / Just Visiting", JAIL},
+        {11, "Nugegoda", PROPERTY,{GROUP_3, 2000, 1000, 100, 200, 400, 0, 0}},
+        {12, "Ceylon Electricity Board", UTILITY},
+        {13, "Maharagama", PROPERTY,{GROUP_3, 2200, 1100, 110, 220, 440, 0, 0}},
+        {14, "Kottawa", PROPERTY,{GROUP_3, 2400, 1200, 120, 240, 480, 0, 0}},
+        {15, "Kandy Railway Station", RAILWAY},
+        {16, "Negombo", PROPERTY,{GROUP_4, 2600, 1300, 130, 260, 520, 0, 0}},
+        {17, "Sri Lanka Insurance", INSURANCE},
+        {18, "Katunayake", PROPERTY,{GROUP_4, 2800, 1400, 140, 280, 560, 0, 0}},
+        {19, "JaEla", PROPERTY,{GROUP_4, 3000, 1500, 150, 300, 600, 0, 0}},
+        {20, "Free Parking", SQUARE_SPECIAL},
+        {21, "Kandy City", PROPERTY,{GROUP_5, 3200, 1600, 160, 320, 640, 0, 0}},
+        {22, "National Event Card", EVENT},
+        {23, "Peradeniya", PROPERTY,{GROUP_5, 3400, 1700, 170, 340, 680, 0, 0}},
+        {24, "Katugastota", PROPERTY,{GROUP_5, 3600, 1800, 180, 360, 720, 0, 0, 0}},
+        {25, "Galle Railway Station", RAILWAY},
+        {26, "Galle Fort", PROPERTY,{GROUP_6, 3800, 1900, 190, 380, 760, 0, 0, 0}},
+        {27, "Unawatuna", PROPERTY,{GROUP_6, 4000, 2000, 200, 400, 800, 0, 0, 0}},
+        {28, "National Water Board", UTILITY},
+        {29, "Hikkaduwa", PROPERTY,{GROUP_6, 4200, 2100, 210, 420, 840, 0, 0, 0}},
+        {30, "Go to Jail", SQUARE_SPECIAL},
+        {31, "Jaffna Town", PROPERTY,{GROUP_7, 4400, 2200, 220, 440, 880, 0, 0, 0}},
+        {32, "Nallur", PROPERTY,{GROUP_7, 4600, 2300, 230, 460, 920, 0, 0, 0}},
+        {33, "Ceylinco Insurance", INSURANCE},
+        {34, "Trincomalee", PROPERTY,{GROUP_7, 4800, 2400, 240, 480, 960, 0, 0, 0}},
+        {35, "Jaffna Railway Station", RAILWAY},
+        {36, "National Event Card", EVENT},
+        {37, "Nuwara Eliya", PROPERTY,{GROUP_8, 5000, 2500, 250, 500, 1000, 0, 0, 0}},
+        {38, "Bank of Ceylon", BANK},
+        {39, "Galle Face", PROPERTY,{GROUP_8, 5200, 2600, 260, 520, 1040, 0, 0, 0}}
+    };
