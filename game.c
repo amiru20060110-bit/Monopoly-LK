@@ -5,10 +5,13 @@
 #include "types.h"
 #include "board.h"
 
+
 int move_player(Player players[4] , int starting_player_index, int roll_round[4] , int current_idx , int i);//calls for move_player function to move the player based on the roll.
 const char* get_name_string(int index); //get the name of the square based on the index
 const char* get_type_string(SquareType type); //get the type of the square based on the SquareType enum
 const char* get_color_group_string(ColorGroup group); //get the color group of the property based on the ColorGroup enum
+
+
 
 int roll_dice() {
     return rand() % 6 + 1; // Returns a random number between 1 and 6
@@ -88,10 +91,17 @@ void condition_check_squares(const char* current_square_name, const char* curren
 
 
     } else if (current_square_type == "Tax") {
-        printf("%s landed on a Tax square: %s. Tax must be paid.\n", players[current_idx].name, current_square_name);
-    } else if (current_square_type == "Event") {
-        printf("%s landed on an Event square: %s. An event will occur.\n", players[current_idx].name, current_square_name);
-    } else if (current_square_type == "Jail") {
+        printf("%s landed on a Tax square: %s. Tax must be paid.\n", players[current_idx].name, current_square_name);    
+    }
+    
+    else if (current_square_type == "Event") {
+        printf("%s landed on an Event square: %s. A National Event will occur.\n", players[current_idx].name, current_square_name);
+        void card_draw_cycle(Player players[4], int current_idx, Event cards[20]); // Declare the function prototype
+        card_draw_cycle(players, current_idx, cards); // Call the function to handle the event
+
+    } 
+    
+    else if (current_square_type == "Jail") {
         printf("%s landed on Jail: %s. They are just visiting.\n", players[current_idx].name, current_square_name);
     } else if (current_square_type == "Special Square") {
         printf("%s landed on a Special square: %s. No action is required.\n", players[current_idx].name, current_square_name);
