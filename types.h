@@ -50,6 +50,38 @@ typedef struct {
 
 } Square;//made a new data type called Square which is a struct that contains a SquareType variable called type
 
+typedef enum{
+    Tourism_Hype,
+    Fuel_Shortage,
+    Heavy_Floods,
+    Political_Rally,
+    Stock_Market_Rise,
+    Economic_Downturn,
+    Housing_Subsidy,
+    Interest_Rate_Cut,
+    Interest_Rate_Increase,
+    Tax_Amnesty,
+    Power_Failure,
+    Foreign_Funding,
+    Port_Expansion,
+    Festival_Season,
+    Labour_Strike,
+    Insurance_Discount,
+    Property_Revaluation,
+    Currency_Depreciation,
+    Government_Grant,
+    National_Disaster
+
+} EventType;//made a new data type called EventType which is an enum that contains all the different types of events that can occur on an event square on the board
+
+typedef struct {
+    int event_id; // Unique identifier for the event
+    char description[100]; // Description of the event
+    EventType type; // Type of effect (e.g., gain money, lose money, move to a square, etc.)
+    int effect_value; // Value associated with the effect (e.g., amount of money gained or lost)
+   
+} Event;//made a new data type called Event which is a struct that contains all the different attributes of an event square on the board
+
 
 #endif // TYPES_H
 
