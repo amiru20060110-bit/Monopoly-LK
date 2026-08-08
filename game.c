@@ -1,3 +1,4 @@
+//its hard programme
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -33,18 +34,38 @@ int roundfunc(Player players[4] , int starting_player_index) {
     }
 
 }
-
-void buy_property(Player players[4], int current_idx) { //buy property function to handle property purchase when a player lands on an unowned property
-    int property_price = board[players[current_idx].position].property.purchase_price;
-    if (players[current_idx].balance >= property_price) {
-
-        players[current_idx].balance -= property_price;
-        board[players[current_idx].position].property.owner_id = players[current_idx].id;//set owner_id of the property to the player's id
-        printf("%s purchased %s for LKR %d. New Balance: LKR %d\n", players[current_idx].name, board[players[current_idx].position].name, property_price, players[current_idx].balance);
-    } else {
-        printf("%s does not have enough balance to purchase %s. Current Balance: LKR %d, Purchase Price: LKR %d\n", players[current_idx].name, board[players[current_idx].position].name, players[current_idx].balance, property_price);
+//update rent multiplier and remaining rounds for rent boosts
+void update_rent_boosts(Player *player ){
+    if(player->rent_boosts_rounds_remaining > 0) {
+        player->rent_boosts_rounds_remaining--;
+        if (player->rent_boosts_rounds_remaining == 0) {
+            player->rent_multiplier = 1; // Reset rent multiplier to normal
+            printf("%s's rent boost has expired. Rent multiplier reset to %d.\n", player->name, player->rent_multiplier);
+        }
     }
 }
+
+void buy_property_railway(Player players[4], int current_idx, const char* current_square_type) { //buy property function to handle property purchase when a player lands on an unowned property or railway
+    int railway_price = 1500;
+    int property_price = board[players[current_idx].position].property.purchase_price;
+    if(current_square_type == "Property"){//property purchase logic
+                 players[current_idx].balance -= property_price;
+                 board[players[current_idx].position].property.owner_id = players[current_idx].id;//set owner_id of the property to the player's id
+                 printf("%s purchased %s for LKR %d. New Balance: LKR %d\n", players[current_idx].name, board[players[current_idx].position].name, property_price, players[current_idx].balance);        
+                 printf("%s now owns %s.\n", players[current_idx].name, board[players[current_idx].position].name);
+
+    }
+    if(current_square_type == "Railway"){//railway purchase logic
+                 players[current_idx].balance -= railway_price;
+                 board[players[current_idx].position].property.owner_id = players[current_idx].id;//set owner_id of the property to the player's id
+                 printf("%s purchased %s for LKR %d. New Balance: LKR %d\n", players[current_idx].name, board[players[current_idx].position].name, railway_price, players[current_idx].balance);  
+                 printf("%s now owns %s.\n", players[current_idx].name, board[players[current_idx].position].name);      
+
+    }
+       
+}
+
+
 
 void pay_rent(Player players[4], int current_idx, int owner_idx, int rent_amount) {   //pay rent function to handle rent payment when a player lands on another player's property
                 
@@ -65,14 +86,14 @@ void pay_rent(Player players[4], int current_idx, int owner_idx, int rent_amount
 void condition_check_squares(const char* current_square_name, const char* current_square_type, const char* current_square_color_group, Player players[4], int current_idx) {
 
 
-    if (current_square_type == "Property" || current_square_type == "Railway" || current_square_type == "Utility" || current_square_type == "Bank" || current_square_type == "Insurance") {
+    if (current_square_type == "Property" ) {
 
-        if (current_square_type == "Property" && board[players[current_idx].position].property.owner_id == 0) {//property buying logic
+        if ((current_square_type == "Property") && board[players[current_idx].position].property.owner_id == -1) {//property purchase logic
             printf("%s landed on an unowned property: %s. It can be purchased.\n", players[current_idx].name, current_square_name); 
 
             if(players[current_idx].balance >= board[players[current_idx].position].property.purchase_price) {
                 printf("%s has enough balance to purchase %s for LKR %d.\n", players[current_idx].name, current_square_name, board[players[current_idx].position].property.purchase_price);
-                buy_property(players, current_idx); // Call the function to handle property purchase
+                buy_property_railway(players, current_idx, current_square_type); // Call the function to handle property purchase
             } else {
                 printf("%s does not have enough balance to purchase %s. Current Balance: LKR %d, Purchase Price: LKR %d\n", players[current_idx].name, current_square_name, players[current_idx].balance, board[players[current_idx].position].property.purchase_price);
             }
@@ -81,16 +102,34 @@ void condition_check_squares(const char* current_square_name, const char* curren
         else if (current_square_type == "Property" && board[players[current_idx].position].property.owner_id != players[current_idx].id) {//property rent logic
             printf("%s landed on a property owned by Player %d: %s. Rent must be paid!\n", players[current_idx].name, board[players[current_idx].position].property.owner_id, current_square_name);
             // Call the function to handle rent payment
-            int rent_amount = board[players[current_idx].position].property.base_rent;
+            int rent_amount = board[players[current_idx].position].property.base_rent*players[current_idx].rent_multiplier; // Calculate rent based on the player's rent multiplier
+            
             pay_rent(players, current_idx, board[players[current_idx].position].property.owner_id, rent_amount);
         } 
+        
+        
         
         else {
             printf("%s landed on their own property: %s.\n", players[current_idx].name, current_square_name);//player landed on their own property
         }
+    } 
+
+    else if (current_square_type == "Railway" && board[players[current_idx].position].property.owner_id == -1) { //logic for unowned railway squares
+        printf("%s landed on an unowned railway: %s. It can be purchased.\n", players[current_idx].name, current_square_name);
+        // Call the function to handle railway purchase
+        if (players[current_idx].balance >= 1500) {
+            printf("%s has enough balance to purchase %s for LKR %d.\n", players[current_idx].name, current_square_name, 1500);
+            buy_property_railway(players, current_idx, current_square_type); // Call the function to handle railway purchase
+        } else {
+            printf("%s does not have enough balance to purchase %s. Current Balance: LKR %d, Purchase Price: LKR %d\n", players[current_idx].name, current_square_name, players[current_idx].balance, 1500);
+        }
+    
+    }
 
 
-    } else if (current_square_type == "Tax") {
+    
+    
+    else if (current_square_type == "Tax") {
         printf("%s landed on a Tax square: %s. Tax must be paid.\n", players[current_idx].name, current_square_name);    
     }
     
@@ -172,10 +211,10 @@ const char* get_color_group_string(ColorGroup group) {  //get the color group of
 int main() {
     srand(time(NULL)); // Seed the random number generator
     Player players[4] = {
-        {1, "Aggressive Investor", 30000, 0},
-        {2, "Conservative Banker", 30000, 0},
-        {3, "Risk-Taker", 30000, 0},
-        {4, "Opportunistic Trader", 30000, 0}
+        {1, "Aggressive Investor", 30000, 0, 1, 0},
+        {2, "Conservative Banker", 30000, 0, 1, 0},
+        {3, "Risk-Taker", 30000, 0, 1, 0},
+        {4, "Opportunistic Trader", 30000, 0, 1, 0}
     };
     int roll[4];
     int max_roll = 0;
@@ -199,7 +238,10 @@ int main() {
         printf("%s\n", players[player_index].name);
     }
 
-    roundfunc(players, starting_player_index);  //start the rounds.
+    roundfunc(players, starting_player_index);  //start the rounds
+    void update_rent_boosts(Player *player ); // Declare the function prototype
+    //end of this round
+
 
 }
 
