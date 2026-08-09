@@ -4,7 +4,7 @@
 #include "players.h"
 #include "board.h"
 
-void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Square board[40], int current_idx, Player players[4]); // Function prototype for executing event effects
+void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Player players[4]); // Function prototype for executing event effects
 static int current_card_index = 0;  //get the top card from the deck and apply its effect to the current player
 
 void card_draw_cycle(Player players[4], int current_idx, Event cards[20]) {
@@ -12,18 +12,16 @@ void card_draw_cycle(Player players[4], int current_idx, Event cards[20]) {
     printf("%s drew a card: %s\n", players[current_idx].name, drawn_card.description);
     
     //Execute card effect on the player
-    execute_event_effect(&players[current_idx], drawn_card.type, &drawn_card.effect_value, board, current_idx, players);
-
+    execute_event_effect(&players[current_idx], drawn_card.type, &drawn_card.effect_value, players);
     //put card at bottom of the deck
     current_card_index = (current_card_index + 1) % 20;  
 }
 
-void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Square board[40], int current_idx, Player players[4]) {
+void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Player players[4]) {
     switch (event_type) {
         case Tourism_Hype:
             player->rent_multiplier *= 2; // Double the rent multiplier for 5 rounds
             player->rent_boosts_rounds_remaining = 5; // Set the number of turns the rent boost effect remains active
-            
             printf("%s's hotel rent amount is doubled to LKR %d for this turn.\n", player->name, *rent_amount);
             break;
         case Fuel_Shortage:
@@ -64,6 +62,7 @@ void execute_event_effect(Player* player, EventType event_type,int *rent_amount,
         case Tax_Amnesty:
             player->balance += 2000;
             printf("%s's balance increased by LKR 2000. New balance: LKR %d\n", player->name, player->balance); 
+            break;
         case Power_Failure:
             player->balance -= 300;
             printf("%s's balance decreased by LKR 300. New balance: LKR %d\n", player->name, player->balance);
@@ -75,6 +74,7 @@ void execute_event_effect(Player* player, EventType event_type,int *rent_amount,
         case Port_Expansion:
             player->balance += 800; 
             printf("%s's port rent amount is increased to LKR %d for this turn.\n", player->name, *rent_amount);
+            break;
         case Festival_Season:
             player->balance += 500;
             printf("%s's balance increased by LKR 500. New balance: LKR %d\n", player->name, player->balance);
@@ -95,13 +95,13 @@ void execute_event_effect(Player* player, EventType event_type,int *rent_amount,
             player->balance -= 500;
             printf("%s's balance decreased by LKR 500. New balance: LKR %d\n", player->name, player->balance);
             break;
-        case Government_Grant:
+        case Government_Grant:{
             //randomly select a player to receive the grant
             int grant_recipient_index = rand() % 4; // Assuming there are 4 players
             players[grant_recipient_index].balance += 5000;
             printf("%s received a government grant of LKR 5000. New balance: LKR %d\n", players[grant_recipient_index].name, players[grant_recipient_index].balance);
             break;    
-            
+        }    
         case National_Disaster:
             player->balance -= 1500;
             printf("%s's balance decreased by LKR 1500. New balance: LKR %d\n", player->name, player->balance);     
