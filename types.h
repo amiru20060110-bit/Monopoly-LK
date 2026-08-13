@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+
 //square types
 typedef enum {
     PROPERTY,
@@ -37,8 +38,11 @@ typedef struct {
     int house_count;    // Number of houses (0-4)
     int hotel_count;    // Number of hotels (0 or 1)
     int owner_id;        // Player ID of the owner (0 if unowned)
+    int is_mortgaged;
+    int loan_locked;
 
 } Property;//made a new data type called Property which is a struct that contains all the different properties of a property square on the board
+
 
 //struct for square
 
