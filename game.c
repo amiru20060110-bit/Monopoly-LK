@@ -59,7 +59,8 @@ int roundfunc(Player players[4] , int starting_player_index ,int round) {
 
 void buy_property_railway(Player *player, const char* current_square_type) { //buy property function to handle property purchase when a player lands on an unowned property or railway
     int railway_price = 1500;
-    int property_price = board[player->position].property.purchase_price;
+    int property_price = player->market_rise_multiplier * player->market_downturn_multiplier * board[player->position].property.purchase_price;
+
     if(strcmp(current_square_type, "Property") == 0){//property purchase logic
                  player->balance -= property_price;
                  board[player->position].property.owner_id = player->id;//set owner_id of the property to the player's id
@@ -87,6 +88,7 @@ void pay_rent_property_railway(Player *player, Player *owner, const char* curren
                     player->balance -= rent_amount;
                     owner->balance += rent_amount;
                     printf("%s paid LKR %d in rent to Player %d. New Balance: LKR %d\n", player->name, rent_amount, owner->id, player->balance);
+                    printf("Player %d's new balance: LKR %d\n", owner->id, owner->balance);
                 } else {
                     printf("%s does not have enough balance to pay the rent of LKR %d. Current Balance: LKR %d\n", player->name, rent_amount, player->balance);
                     // Here you can add logic for bankruptcy or other consequences.
@@ -99,6 +101,7 @@ void pay_rent_property_railway(Player *player, Player *owner, const char* curren
                     player->balance -= rent_amount;
                     owner->balance += rent_amount;
                     printf("%s paid LKR %d in railway rent to Player %d. New Balance: LKR %d\n", player->name, rent_amount, owner->id, player->balance);
+                    printf("Player %d's new balance: LKR %d\n", owner->id, owner->balance);
                 } else {
                     printf("%s does not have enough balance to pay the railway rent of LKR %d. Current Balance: LKR %d\n", player->name, rent_amount, player->balance);
                     // Here you can add logic for bankruptcy or other consequences.
@@ -106,6 +109,74 @@ void pay_rent_property_railway(Player *player, Player *owner, const char* curren
     }
 }
 
+int check_color_group_monopoly(Square board[40], Player players[4], int current_idx, ColorGroup target_group ){
+        int matching_groups_found = 0;
+        int own_groups_found = 0;
+        for(int m = 0 ; m < 40; m++){
+            if(board[m].type == 0 && board[m].property.group == target_group){
+                matching_groups_found++;
+                if(board[m].property.owner_id == players[current_idx].id && board[m].property.is_mortgaged == 0){
+                    own_groups_found++;
+                }
+            }
+
+        } 
+        if(own_groups_found == matching_groups_found){
+            return 1;
+        }
+        return 0;
+}
+
+void take_Loan(Square board[40],int current_idx, Player players[4] ){
+    int Total_Mortgage_Value = 0;
+    int req_loan_size;
+    if(players[current_idx].active_loan == 0){
+        for(int s = 0 ; s < 40; s++){
+            if((board[s].type == 0 || board[s].type == 1 || board[s].type == 2) && board[s].property.owner_id == players[current_idx].id && board[s].property.is_mortgaged == 0){
+                Total_Mortgage_Value += board[s].property.mortgage_value;
+            }
+        }
+        if(Total_Mortgage_Value == 0  || req_loan_size > Total_Mortgage_Value*0.75){
+            printf("%s's balance not enough to take a loan\n", players[current_idx].name);
+        }else {
+            printf("%s granted a loan amount of %d from Bank of Ceylon\n", players[current_idx].name , req_loan_size);
+            players[current_idx].balance += req_loan_size;
+            players[current_idx].loan_size += req_loan_size;
+            players[current_idx].active_loan = 1;
+        }
+    }
+    else{
+        printf("%s already have an active loan amount of %d\n", players[current_idx].name, players[current_idx].loan_size);
+    }
+}
+
+void loan_interest(Square board[40],int current_idx, Player players[4] ){
+    float interest_rate = 0.05;
+    int interest = players[current_idx].loan_size * interest_rate;
+    players[current_idx].loan_size += interest;
+    if(players[current_idx].loan_rounds_remaining == 0 && players[current_idx].active_loan == 1){
+        printf("%s's Loan DEFAULT state.All assests will go to bank.\n", players[current_idx].name);
+        players[current_idx].active_loan = 0;
+        players[current_idx].loan_size = 0;
+        for(int s = 0 ; s < 40; s++){
+            if((board[s].type == 0 || board[s].type == 1 || board[s].type == 2) && board[s].property.owner_id == players[current_idx].id && board[s].property.is_mortgaged == 0){
+                board[s].property.owner_id = -1;
+                board[s].property.hotel_count = 0;
+                board[s].property.house_count = 0;
+            }
+        }
+
+
+    }else if (players[current_idx].loan_rounds_remaining > 0){
+        players[current_idx].loan_rounds_remaining--;        
+    }
+}
+
+void pay_loan(Square board[40],int current_idx, Player players[4] ){
+    int pay_amount;
+    players[current_idx].loan_size -= pay_amount;
+
+}
 
 //check the conditions of the square the player landed on and print appropriate messages
 void condition_check_squares(const char* current_square_name, const char* current_square_type, const char* current_square_color_group, Player players[4], int current_idx) {
@@ -130,8 +201,31 @@ void condition_check_squares(const char* current_square_name, const char* curren
         } 
         else {
             printf("%s landed on their own property: %s.\n", players[current_idx].name, current_square_name);//player landed on their own property
-        }
+            //check house build requirements
+            //check owned a complete color group    
+            int can_buy = check_color_group_monopoly(board, players,current_idx, board[players[current_idx].position].property.group);
+            if(can_buy == 1 && board[players[current_idx].position].property.house_count < 4 && board[players[current_idx].position].property.hotel_count < 1){
+                printf("%s can build a house in %s\n", players[current_idx].name, current_square_name);
+                if(players[current_idx].balance >= board[players[current_idx].position].property.house_cost){
+                    players[current_idx].balance -= board[players[current_idx].position].property.house_cost;
+                    board[players[current_idx].position].property.house_count++;
+                    printf("%s built a house in %s\n", players[current_idx].name, current_square_name);
+                }
+            }else if(can_buy == 1 && board[players[current_idx].position].property.house_count == 4 && board[players[current_idx].position].property.hotel_count < 1){
+                printf("%s can convert owned 4 houses into a hotel in %s\n", players[current_idx].name, current_square_name);
+                if(players[current_idx].balance >= board[players[current_idx].position].property.hotel_cost){
+                    players[current_idx].balance -= board[players[current_idx].position].property.hotel_cost;
+                    board[players[current_idx].position].property.hotel_count++;
+                    printf("%s built a hotel in %s\n", players[current_idx].name, current_square_name);
+                    board[players[current_idx].position].property.house_count = 0;
+                    
+                }
+            }else if(board[players[current_idx].position].property.hotel_count == 1){
+                printf("%s's maximum built level reached in %s\n", players[current_idx].name, current_square_name);
+            }
+           
     } 
+}
 
 
     if(strcmp(current_square_type, "Railway") == 0){
@@ -158,6 +252,11 @@ void condition_check_squares(const char* current_square_name, const char* curren
              }
     }
 
+    else if(strcmp(current_square_type, "Bank") == 0){
+        printf("%s landed on a Bank square:%s\n", players[current_idx].name, current_square_name);
+        take_Loan(board, current_idx, players);
+    }
+
     else if (strcmp(current_square_type, "Tax") == 0) {
         printf("%s landed on a Tax square: %s. Tax must be paid.\n", players[current_idx].name, current_square_name);    
     }
@@ -173,27 +272,32 @@ void condition_check_squares(const char* current_square_name, const char* curren
     } else if (strcmp(current_square_type, "Special Square") == 0) {
         printf("%s landed on a Special square: %s. No action is required.\n", players[current_idx].name, current_square_name);
     }
+    loan_interest(board, current_idx, players);
+
 }
 
 
 int move_player(Player players[4] , int starting_player_index, int roll_round[4] , int current_idx , int i) {
     //move to new square based on roll_round[i] and update player position
-    players[current_idx].position = (players[current_idx].position + roll_round[i]) % 40; // Assuming a board with 40 squares
-        printf("%s moves from square %d to square %d\n", players[current_idx].name, players[current_idx].position - roll_round[i], players[current_idx].position);
-        int x = players[current_idx].position;
+    
+        int old_position = players[current_idx].position; // Store the old position before moving
+        int new_position = (old_position + roll_round[i]) % 40; // Calculate the new position based on the roll and wrap around the board
+        players[current_idx].position = new_position; // Update the player's position
+        printf("%s moves from square %d to square %d\n", players[current_idx].name, old_position, new_position);
+        int x = new_position;
         const char* current_square_name = get_name_string(x);
         const char* current_square_type = get_type_string(board[x].type);
         const char* current_square_color_group = get_color_group_string(board[x].property.group);
         printf("%s landed on square %d: %s (Type: %s, Color Group: %s)\n", players[current_idx].name, x, current_square_name, current_square_type, current_square_color_group);
-        condition_check_squares(current_square_name, current_square_type, current_square_color_group, players, current_idx);
-
+        
         //passing go
-        if (players[current_idx].position < roll_round[i]) {
-            printf("%s passed GO and collects LKR2000!\n", players[current_idx].name);
+        if (new_position < old_position) { // Check if the player has passed GO
             players[current_idx].balance += 2000; // Assuming passing GO gives LKR2000
             printf("%s passed GO. Collected LKR 2000.00\n Current Balance: LKR %d\n", players[current_idx].name, players[current_idx].balance);
             
         }
+        condition_check_squares(current_square_name, current_square_type, current_square_color_group, players, current_idx);
+
 }
 
 
@@ -237,12 +341,13 @@ const char* get_color_group_string(ColorGroup group) {  //get the color group of
 
 
 int main() {
-    srand(time(NULL)); // Seed the random number generator
+    srand(time(NULL)); // Seed the random number generator 
+    // id,name[50],balance,position,rent_multiplier,rent_boosts_rounds_remaining,,market_rise_multiplier,market_downturn_multiplier, active_loan, loan_size
     Player players[4] = {
-        {0, "Aggressive Investor", 30000, 0, 1, 0},
-        {1, "Conservative Banker", 30000, 0, 1, 0},
-        {2, "Risk-Taker", 30000, 0, 1, 0},
-        {3, "Opportunistic Trader", 30000, 0, 1, 0}
+        {0, "Aggressive Investor", 30000, 0, 1, 0, 1.0f, 1.0f, 0, 0},
+        {1, "Conservative Banker", 30000, 0, 1, 0, 1.0f, 1.0f, 0, 0},
+        {2, "Risk-Taker", 30000, 0, 1, 0, 1.0f, 1.0f, 0, 0},
+        {3, "Opportunistic Trader", 30000, 0, 1, 0, 1.0f, 1.0f, 0, 0}
     };
     int roll[4];
     int max_roll = 0;
@@ -267,7 +372,7 @@ int main() {
     }
 
 
-    for (int round = 1; round <= 20; round++) {  // Simulate 20 rounds
+    for (int round = 1; round <= 5; round++) {  // Simulate 20 rounds
         printf("\n--- Round %d ---\n", round);
         roundfunc(players, starting_player_index,round);  //start the rounds
         //time delay between rounds        
