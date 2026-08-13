@@ -4,32 +4,31 @@
 #include "players.h"
 #include "board.h"
 
-void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Player players[4]); // Function prototype for executing event effects
+void execute_event_effect(Player* player, EventType event_type,int effect_value, Player players[4]); // Function prototype for executing event effects
 static int current_card_index = 0;  //get the top card from the deck and apply its effect to the current player
 
 void card_draw_cycle(Player players[4], int current_idx, Event cards[20]) {
     Event drawn_card = cards[current_card_index]; // Get the drawn card
     printf("%s drew a card: %s\n", players[current_idx].name, drawn_card.description);
-    
     //Execute card effect on the player
-    execute_event_effect(&players[current_idx], drawn_card.type, &drawn_card.effect_value, players);
+    execute_event_effect(&players[current_idx], drawn_card.type, drawn_card.effect_value, players);
     //put card at bottom of the deck
     current_card_index = (current_card_index + 1) % 20;  
 }
 
-void execute_event_effect(Player* player, EventType event_type,int *rent_amount, Player players[4]) {
+void execute_event_effect(Player* player, EventType event_type,int effect_value, Player players[4]) {
     switch (event_type) {
         case Tourism_Hype:
-            player->rent_multiplier *= 2; // Double the rent multiplier for 5 rounds
+            player->rent_multiplier = 2; // Double the rent multiplier for 5 rounds
             player->rent_boosts_rounds_remaining = 5; // Set the number of turns the rent boost effect remains active
-            printf("%s's hotel rent amount is doubled to LKR %d for this turn.\n", player->name, *rent_amount);
+            printf("%s's hotel rent amount is doubled!\n", player->name);
             break;
         case Fuel_Shortage:
             //Railway rent is doubled for 5 rounds
-            player->rent_multiplier *= 2; // Double the rent multiplier for 5 rounds
+            player->rent_multiplier = 2; // Double the rent multiplier for 5 rounds
             player->rent_boosts_rounds_remaining = 5; // Set the number of turns the rent boost effect remains active
 
-            printf("%s's railway rent doubled to LKR %d\n", player->name, *rent_amount);
+            printf("%s's railway rent doubled!\n", player->name);
             break;
         case Heavy_Floods:
             player->balance -= 1500;
@@ -40,12 +39,13 @@ void execute_event_effect(Player* player, EventType event_type,int *rent_amount,
             printf("%s's balance increased by LKR 800. New balance: LKR %d\n", player->name, player->balance);
             break;
         case Stock_Market_Rise:
-            player->balance += 1200;
-            printf("%s's balance increased by LKR 1200. New balance: LKR %d\n", player->name, player->balance);
+            player->market_rise_multiplier *= 1.1f;
+            printf("Market rise multiplier activated.\n");
+         
             break;
         case Economic_Downturn:
-            player->balance -= 1000;
-            printf("%s's balance decreased by LKR 1000. New balance: LKR %d\n", player->name, player->balance);
+            player->market_downturn_multiplier *= 0.85f; 
+            printf("Market downturn multiplier activated.\n");
             break;
         case Housing_Subsidy:
             player->balance += 700;
@@ -73,7 +73,7 @@ void execute_event_effect(Player* player, EventType event_type,int *rent_amount,
             break;
         case Port_Expansion:
             player->balance += 800; 
-            printf("%s's port rent amount is increased to LKR %d for this turn.\n", player->name, *rent_amount);
+            printf("%s's port rent amount is increased!\n", player->name);
             break;
         case Festival_Season:
             player->balance += 500;
